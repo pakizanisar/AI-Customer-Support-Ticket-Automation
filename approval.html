@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Human Review Required</title>
+</head>
+
+<body>
+
+<h2>Human Review Required</h2>
+
+<p><strong>Case ID:</strong> <span id="case_id">Loading...</span></p>
+<p><strong>Customer:</strong> <span id="customer_id">Loading...</span></p>
+<p><strong>Message:</strong> <span id="message">Loading...</span></p>
+<p><strong>Issue:</strong> <span id="issue">Loading...</span></p>
+<p><strong>Priority:</strong> <span id="priority">Loading...</span></p>
+<p><strong>Status:</strong> <span id="status">Loading...</span></p>
+
+<br>
+
+<button onclick="sendDecision('approved')">APPROVE</button> <button onclick="sendDecision('rejected')">REJECT</button>
+
+<p id="result"></p>
+
+<script>
+
+const params = new URLSearchParams(window.location.search);
+const caseId = params.get("case_id");
+
+fetch(
+    "http://localhost:5678/webhook/get_pending_case?case_id="
+    + encodeURIComponent(caseId)
+)
+.then(response => response.json())
+.then(data => {
+
+    console.log("Data received from n8n:", data);
+
+    document.getElementById("case_id").innerText = data.case_id;
+    document.getElementById("customer_id").innerText = data.customer_id;
+    document.getElementById("message").innerText = data.message;
+    document.getElementById("issue").innerText = data.issue;
+    document.getElementById("priority").innerText = data.priority;
+    document.getElementById("status").innerText = data.status;
+
+})
+.catch(error => {
+
+    console.error("Error:", error);
+    document.getElementById("result").innerText =
+        "Could not load case information.";
+
+});
+
+function sendDecision(decision) {
+
+    fetch(
+        "http://localhost:5678/webhook/approval-decision",
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                case_id: caseId,
+                decision: decision
+            })
+        }
+    )
+    .then(response => {
+
+        if (!response.ok) {
+            throw new Error("HTTP error: " + response.status);
+        }
+
+        document.getElementById("result").innerText =
+            "Decision sent: " + decision;
+
+    })
+    .catch(error => {
+
+        console.error("Error:", error);
+        document.getElementById("result").innerText =
+            "Failed to send decision.";
+
+    });
+
+
+}
+
+</script>
+
+</body>
+</html>
