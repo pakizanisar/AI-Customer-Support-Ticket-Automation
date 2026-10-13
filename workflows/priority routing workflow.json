@@ -1,0 +1,928 @@
+{
+  "name": "Priority_Routing_Workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -640,
+        320
+      ],
+      "id": "439737b2-52a4-4332-b62c-e004a29ffb25",
+      "name": "Wait"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -448,
+        1152
+      ],
+      "id": "584ecfd6-ef22-40c4-9537-e6dd47f84cb1",
+      "name": "Wait1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.priority }}",
+                    "rightValue": "high",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "a9cb37cd-b99f-4401-ab51-475cb82cd9ee"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "e8569b28-18eb-41db-99a3-30b8bddb9366",
+                    "leftValue": "={{ $json.priority }}",
+                    "rightValue": "medium",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "f43e5cef-0334-4d16-a47c-45fffcbe25cd",
+                    "leftValue": "={{ $json.priority }}",
+                    "rightValue": "low",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -2816,
+        768
+      ],
+      "id": "0b7ef479-c1ad-4789-919a-d8d9955c2d2b",
+      "name": "Priority Router"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/get-case",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -1888,
+        64
+      ],
+      "id": "647be8fb-dfc1-4468-9780-f250b8bee856",
+      "name": "Send High-Priority Case to HITL",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const error_status = $input.first().json.error.status\nconst retryable = error_status === 429 ||\n  error_status === 500 ||\n  error_status === 502 ||\n  error_status === 503 ||\n  error_status === 504 ||\n  error_status === 505\nreturn [{\n  json:{\n    ...$json,\n    retryable\n  }\n}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1664,
+        208
+      ],
+      "id": "67126f93-876f-4887-8a0a-6579fc703cc5",
+      "name": "Claasify Error"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7aea587f-5ed4-4bc8-85d6-ec7116a0565c",
+              "leftValue": "={{ $json.retryable }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1520,
+        992
+      ],
+      "id": "b0b226b8-69dd-4b66-92f7-a16702e9285d",
+      "name": "Retryable?1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "571767d2-25ad-456e-acee-2d0aff4b37d7",
+              "leftValue": "={{ $json.retryable }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1440,
+        208
+      ],
+      "id": "ee208f25-ac14-46b6-9107-32c4263c0e41",
+      "name": "If Retryable?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const retry_count = ($json.retry_count || 0) + 1\nreturn [{\n  json:{\n    ...$json,\n    retry_count\n  }\n}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1168,
+        32
+      ],
+      "id": "29410265-9284-4e85-a444-c26148baf7f4",
+      "name": "Update Retry Count"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b58a78b9-18ab-4037-b541-9f3c492f7f63",
+              "leftValue": "={{ $json.retry_count }}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -896,
+        32
+      ],
+      "id": "bcda07e6-6cbb-4bf6-8877-511b1c754f04",
+      "name": "Within Retry Limit?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const error_items = $input.all().map(item => item.json)\nreturn error_items.map(item => {\n  const retryable = item.error.status === 429 ||\n  item.error.status === 500 ||\n  item.error.status === 502 ||\n  item.error.status === 503 ||\n  item.error.status === 504 \n  return {\n    json:{\n    ...item,\n    retryable  \n    }\n  }\n});\n \n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1760,
+        992
+      ],
+      "id": "b4ea6cd8-e993-49fa-9d6e-4c1f5e6febbe",
+      "name": "Classify API Error"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE dbo.case_table\nSET status = $2,\n  updated_at = GETDATE()\nWHERE case_id = $1;",
+        "options": {
+          "queryReplacement": "={{ $json.case_id }}, {{ $json.status }}"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.2,
+      "position": [
+        -896,
+        1104
+      ],
+      "id": "b21e2e9b-deac-4437-ba37-7cd78502ce14",
+      "name": "Mark Case 'Failed'"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fb90a1b6-af3f-4e06-9455-c988db976d6d",
+              "leftValue": "={{$json.retry_count}}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -928,
+        832
+      ],
+      "id": "39d69603-63d8-4693-9c04-948cf97e2252",
+      "name": "Retry Limit Reached?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const case_data = $input.all()\n\n\nreturn case_data.map(item => {\n  return{\n    json:{\n    case_id : item.json.name,\n    status : \"ticket_created\",\n    ticket_id : item.json.id\n    }\n  }\n});\n\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1808,
+        704
+      ],
+      "id": "b7a11188-7336-4ee1-8ccf-5bdd6d72324d",
+      "name": "Prepare Ticket Update"
+    },
+    {
+      "parameters": {
+        "jsCode": "const cases = $input.all()\nreturn cases.map(item => {\n  return {\n    json:{\n      ...item.json,\n      retry_count : (item.json.retry_count || 0 ) + 1\n    }\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1200,
+        832
+      ],
+      "id": "08d3c834-be87-434e-89dd-0efbf309d88f",
+      "name": "Increment Retry Count"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.restful-api.dev/objects",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  name: $json.name,\n  data: $json.data\n} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -2096,
+        800
+      ],
+      "id": "0fb2d229-2df7-4f99-a2ed-46fe570dd29d",
+      "name": "Create Support Ticket",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE dbo.case_table\nSET status = $2,\nupdated_at = GETDATE()\nOUTPUT INSERTED.case_id,\n  'status updated successfully'\nWHERE case_id = $1;",
+        "options": {
+          "queryReplacement": "={{ $json.case_id }}, {{ $json.status }}"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.2,
+      "position": [
+        -2400,
+        320
+      ],
+      "id": "2a93e31e-fbda-4d5a-919c-adf197b209fd",
+      "name": "Mark Case 'Waiting_for_human_review'"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE dbo.case_table\nSET status = $2,\n  updated_at = GETDATE()\nWHERE case_id = $1",
+        "options": {
+          "queryReplacement": "={{ $json.case_id }}, {{ $json.status }}"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.2,
+      "position": [
+        -2512,
+        1232
+      ],
+      "id": "f96a043e-48b2-4b87-aef7-759a0920174e",
+      "name": "Mark Case 'Invalid_Output'"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{\n  json: {\n    cases: $input.all().map(item=> ({\n      case_id : item.json.case_id\n    })     \n    )\n  }\n}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2160,
+        208
+      ],
+      "id": "79c13e30-93af-4797-9de0-6c930610a82d",
+      "name": "Prepare Case IDs for HITL"
+    },
+    {
+      "parameters": {
+        "jsCode": "const customers_data = $input.all().map(item => item.json)\nreturn customers_data.map(customer => ({\n  json:{\n  ...customer,\n  status : 'waiting_for_human_review'\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2576,
+        544
+      ],
+      "id": "23ea422f-8944-44f9-bfa8-d54be6156246",
+      "name": "Set 'Human Review' Status"
+    },
+    {
+      "parameters": {
+        "jsCode": "const cases = $input.all()\nreturn cases.map(item=>{\n  return{\n    json:{\n      ...item.json,\n      status : \"invalid_output\"\n    }\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2560,
+        976
+      ],
+      "id": "dd8be01c-5eec-4349-ad49-fc58eb7b9e13",
+      "name": "Set 'Invalid Output' Status"
+    },
+    {
+      "parameters": {
+        "jsCode": "const case_data = $input.all()\nreturn case_data.map(item => {\n  return {\n    json:{\n      case_id : item.json.name,\n      status : \"failed\"\n    }\n  }\n})\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1184,
+        1104
+      ],
+      "id": "466b4dc0-93fe-4cfd-854f-385de9389dcf",
+      "name": "Set 'Failed' Status"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE dbo.case_table\nSET status = $2,\n    updated_at = GETDATE()\nWHERE case_id = $1;",
+        "options": {
+          "queryReplacement": "={{ $json.case_id }},{{ $json.status }}"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.2,
+      "position": [
+        -880,
+        304
+      ],
+      "id": "1fc100f5-5e7e-4faf-82a8-987f598fd4d9",
+      "name": "Mark Case 'Excalated'"
+    },
+    {
+      "parameters": {
+        "jsCode": "const cases = $input.first().json.cases\nreturn cases.map(item => {\n  return {\n    json: {\n      ...item,\n      status : 'escalated'\n    }\n  }\n})"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1152,
+        304
+      ],
+      "id": "9f96ed39-6403-454d-afdf-54198be745b1",
+      "name": "Set 'Escalated' Status"
+    },
+    {
+      "parameters": {
+        "jsCode": "const case_data = $input.all()\nreturn case_data.map(item => {\n  return {\n    json:{\n      case_id : item.json.name,\n      status : \"retry_exhausted\"\n    }\n  }\n})"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        544
+      ],
+      "id": "804db62b-3346-49d4-b765-5abd851fe9e6",
+      "name": "Set 'Retry Exhausted' Status"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE dbo.case_table\nSET status = $2,\n  ticket_id = $3,\n updated_at = GETDATE()\nWHERE case_id = $1;\n\n",
+        "options": {
+          "queryReplacement": "={{ $json.case_id }}, {{ $json.status }},{{ $json.ticket_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.2,
+      "position": [
+        -1600,
+        704
+      ],
+      "id": "5a49ecab-7e80-4112-ac04-09581989b3de",
+      "name": "Mark Case 'Ticket Created'"
+    },
+    {
+      "parameters": {
+        "jsCode": "const cases = $input.all().map(item => item.json)\nreturn cases.map(item => {\n  return {\n    json:{\n    name : item.case_id,\n    data : {\n      customer_message : item.message,\n      issue : item.issue,\n      priority: item.priority\n    }\n  }\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2400,
+        800
+      ],
+      "id": "a366b143-c10f-4268-af2c-eff61d5750cc",
+      "name": "Prepare ticket Request"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE dbo.case_table\nSET status = $2,\n    updated_at = GETDATE()\nWHERE case_id = $1;",
+        "options": {
+          "queryReplacement": "={{ $json.case_id }}, {{ $json.status }}"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.2,
+      "position": [
+        -160,
+        544
+      ],
+      "id": "bbf134f3-1852-468e-aa2e-5f4f634da648",
+      "name": "Mark Case 'Retry_Exhausted'"
+    },
+    {
+      "parameters": {
+        "jsCode": "const case_ids = $input.first().json.body.cases\nreturn case_ids.map(item => ({\n  json:{\n    case_id :item\n  }\n}) \n);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3120,
+        480
+      ],
+      "id": "e103aa7c-49e3-418f-8342-0020322eb2cb",
+      "name": "Extract Case IDs"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT case_id, message, issue, priority\nFROM dbo.case_table\nWHERE case_id = $1",
+        "options": {
+          "queryReplacement": "={{ $json.case_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.2,
+      "position": [
+        -3120,
+        800
+      ],
+      "id": "7e0dcef0-c248-4d42-810c-58799267c4c9",
+      "name": "Get Case By IDs"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "process_approved_cases",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3376,
+        480
+      ],
+      "id": "5c72fe08-a160-411a-abea-988caa76a67e",
+      "name": "Receive Cases for Priority Routing"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Send High-Priority Case to HITL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Create Support Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Priority Router": {
+      "main": [
+        [
+          {
+            "node": "Set 'Human Review' Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare ticket Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare ticket Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set 'Invalid Output' Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send High-Priority Case to HITL": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Claasify Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claasify Error": {
+      "main": [
+        [
+          {
+            "node": "If Retryable?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retryable?1": {
+      "main": [
+        [
+          {
+            "node": "Increment Retry Count",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set 'Failed' Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Retryable?": {
+      "main": [
+        [
+          {
+            "node": "Update Retry Count",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set 'Escalated' Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Retry Count": {
+      "main": [
+        [
+          {
+            "node": "Within Retry Limit?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Within Retry Limit?": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set 'Retry Exhausted' Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify API Error": {
+      "main": [
+        [
+          {
+            "node": "Retryable?1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Retry Limit Reached?": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set 'Retry Exhausted' Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Ticket Update": {
+      "main": [
+        [
+          {
+            "node": "Mark Case 'Ticket Created'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Increment Retry Count": {
+      "main": [
+        [
+          {
+            "node": "Retry Limit Reached?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Support Ticket": {
+      "main": [
+        [
+          {
+            "node": "Prepare Ticket Update",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Classify API Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Case 'Waiting_for_human_review'": {
+      "main": [
+        [
+          {
+            "node": "Prepare Case IDs for HITL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Case IDs for HITL": {
+      "main": [
+        [
+          {
+            "node": "Send High-Priority Case to HITL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set 'Human Review' Status": {
+      "main": [
+        [
+          {
+            "node": "Mark Case 'Waiting_for_human_review'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set 'Invalid Output' Status": {
+      "main": [
+        [
+          {
+            "node": "Mark Case 'Invalid_Output'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set 'Failed' Status": {
+      "main": [
+        [
+          {
+            "node": "Mark Case 'Failed'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set 'Escalated' Status": {
+      "main": [
+        [
+          {
+            "node": "Mark Case 'Excalated'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set 'Retry Exhausted' Status": {
+      "main": [
+        [
+          {
+            "node": "Mark Case 'Retry_Exhausted'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare ticket Request": {
+      "main": [
+        [
+          {
+            "node": "Create Support Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Case IDs": {
+      "main": [
+        [
+          {
+            "node": "Get Case By IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Case By IDs": {
+      "main": [
+        [
+          {
+            "node": "Priority Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receive Cases for Priority Routing": {
+      "main": [
+        [
+          {
+            "node": "Extract Case IDs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "nodeGroups": [],
+  "tags": []
+}

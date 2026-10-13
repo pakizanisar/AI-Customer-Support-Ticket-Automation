@@ -1,38 +1,29 @@
 {
-  "name": "Main customer support automation workflow",
+  "name": "main customer support automation workflow",
   "nodes": [
     {
       "parameters": {},
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        1632,
-        -272
+        -176,
+        -240
       ],
       "id": "4a6d7b9b-8e6d-40af-8080-9aed03c49129",
-      "name": "Wait"
+      "name": "Wait",
+      "webhookId": "7231f6b8-4b02-43d5-86c3-e375439b2ac6"
     },
     {
       "parameters": {},
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        1648,
-        608
-      ],
-      "id": "aa87f678-716a-4f4b-b339-3be40e44f184",
-      "name": "Wait1"
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [
-        -192,
-        720
+        64,
+        832
       ],
       "id": "26a54818-e613-44a9-83c4-393b38d8fabe",
-      "name": "Wait2"
+      "name": "Wait2",
+      "webhookId": "351d2b18-688b-4aca-86a9-7a5687200c4a"
     },
     {
       "parameters": {
@@ -48,11 +39,6 @@
               "name": "priority",
               "description": "the urgency of the issue, low, medium or high",
               "required": true
-            },
-            {
-              "name": "case_id",
-              "description": "Preserve the case_id exactly it provided, no markdown",
-              "required": true
             }
           ]
         },
@@ -61,8 +47,8 @@
       "type": "@n8n/n8n-nodes-langchain.informationExtractor",
       "typeVersion": 1.2,
       "position": [
-        -1328,
-        176
+        -1360,
+        304
       ],
       "id": "54cbb07b-4e28-42b1-ba9d-451f323e9426",
       "name": "Information Extractor",
@@ -76,13 +62,14 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
       "typeVersion": 1,
       "position": [
-        -1312,
-        368
+        -1328,
+        512
       ],
       "id": "cec47e3d-3ec9-4e8d-a4a9-93e26eff49e4",
       "name": "Ollama Chat Model1",
       "credentials": {
         "ollamaApi": {
+          "id": "QEwpnOHD3fWiMuNj",
           "name": "Ollama account"
         }
       }
@@ -97,13 +84,15 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        -2720,
-        -128
+        -3280,
+        -192
       ],
       "id": "26752273-02b7-46a9-8423-d38034837361",
       "name": "Recieve Customer Request",
+      "webhookId": "cfeba0f5-20f4-45a1-9bb7-0a0c8f267eba",
       "credentials": {
         "httpHeaderAuth": {
+          "id": "hQMbgxHtReKLyGlR",
           "name": "Header Auth account"
         }
       }
@@ -115,34 +104,34 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1760,
-        64
+        -2608,
+        0
       ],
       "id": "9958dd3a-54dc-4d5b-ba42-f339c68016cb",
       "name": "Generate Case ID & Idempotency Key"
     },
     {
       "parameters": {
-        "jsCode": "const cases = $input.all().map(item => item.json)\nconst customers_data = $(\"Split Customer Requests\").all().map(item => item.json)\nreturn cases.map((item, index)=> {\n  const customer = customers_data.find(customer => customer.customer_gmail === item.gmail)\n  return {\n    json:{\n        customer_id : `C_${Date.now()}_${index+1} `,\n      ...customer     \n    }\n  }\n});"
+        "jsCode": "const cases = $input.all().map(item => item.json)\nconst customers_data = $(\"Split Customer Requests\").all().map(item => item.json)\nreturn cases.map((item, index)=> {\n  const customer = customers_data.find(customer => customer.customer_gmail === item.gmail)\n  return {\n    json:{\n        customer_id : `C_${Date.now()}_${index+1}`,\n      ...customer     \n    }\n  }\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2304,
-        208
+        -2832,
+        528
       ],
       "id": "39ce28f0-1bcb-47c8-822d-dd08d7079bb4",
       "name": "Generate Customer ID"
     },
     {
       "parameters": {
-        "jsCode": "const cases = $input.all().map(item => item.json)\nconst customers_data = $('Generate Case ID & Idempotency Key').all().map( item => item.json)\nreturn cases.map(item => {\n  const customer= customers_data.find(customer => customer.customer_id === item.customer_id)\n  return {\n    json:{\n      case_id : customer.case_id,\n      customer_name : customer.customer_name,\n      customer_gmail : customer.customer_gmail,\n      customer_message : customer.customer_message\n    }\n  }\n});"
+        "jsCode": "const cases = $input.all().map(item => item.json)\nconst customers_data = $('Generate Case ID & Idempotency Key').all().map( item => item.json)\nreturn cases.map(item => {\n  const customer= customers_data.find(customer => customer.case_id === item.case_id)\n  return {\n    json:{\n      customer_id : customer.customer_id,\n      case_id : customer.case_id,\n      customer_name : customer.customer_name,\n      customer_gmail : customer.customer_gmail,\n      customer_message : customer.customer_message\n    }\n  }\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1280,
-        -128
+        -2096,
+        224
       ],
       "id": "75518d5b-8293-4d16-9384-4ee9be5d20a1",
       "name": "Prepare AI Input"
@@ -154,115 +143,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1120,
+        -944,
         560
       ],
       "id": "bf465ef4-1554-4019-84ec-ec60dd3242dd",
       "name": "Classify AI Error"
-    },
-    {
-      "parameters": {
-        "rules": {
-          "values": [
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "leftValue": "={{ $json.priority }}",
-                    "rightValue": "high",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    },
-                    "id": "a9cb37cd-b99f-4401-ab51-475cb82cd9ee"
-                  }
-                ],
-                "combinator": "and"
-              }
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "e8569b28-18eb-41db-99a3-30b8bddb9366",
-                    "leftValue": "={{ $json.priority }}",
-                    "rightValue": "medium",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              }
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "f43e5cef-0334-4d16-a47c-45fffcbe25cd",
-                    "leftValue": "={{ $json.priority }}",
-                    "rightValue": "low",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              }
-            }
-          ]
-        },
-        "options": {
-          "fallbackOutput": "extra"
-        }
-      },
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3.4,
-      "position": [
-        -128,
-        -64
-      ],
-      "id": "aa140a33-290f-468b-94c6-a607369ba00a",
-      "name": "Priority Router"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://localhost:5678/webhook/get-case",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ $json }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.5,
-      "position": [
-        608,
-        -752
-      ],
-      "id": "f9921af3-ae4d-40a4-9a33-9961b48bef61",
-      "name": "Send High-Priority Case to HITL",
-      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -271,8 +156,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        832,
-        -592
+        -1200,
+        -400
       ],
       "id": "e1a0347c-4971-4665-b9c7-60ef0f5c66fe",
       "name": "Claasify Error"
@@ -304,45 +189,11 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -928,
-        560
+        -720,
+        688
       ],
       "id": "5a00c1f8-e73f-40ea-b2f7-a56dfa409446",
       "name": "Retryable?"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "7aea587f-5ed4-4bc8-85d6-ec7116a0565c",
-              "leftValue": "={{ $json.retryable }}",
-              "rightValue": "true",
-              "operator": {
-                "type": "boolean",
-                "operation": "true",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        720,
-        528
-      ],
-      "id": "0f46317c-cd49-486f-8a54-42bb6cafa67a",
-      "name": "Retryable?1"
     },
     {
       "parameters": {
@@ -371,8 +222,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        848,
-        -352
+        -976,
+        -400
       ],
       "id": "2d539ca5-f30b-425f-9af2-bb4b6191cb08",
       "name": "If Retryable?"
@@ -384,8 +235,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1104,
-        -512
+        -720,
+        -560
       ],
       "id": "6212a894-fa94-48c0-9c54-a59da1be2877",
       "name": "Update Retry Count"
@@ -417,8 +268,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1344,
-        -512
+        -496,
+        -560
       ],
       "id": "4d21bace-3bda-41ba-8ba2-67b0b69e8b73",
       "name": "Within Retry Limit?"
@@ -434,143 +285,17 @@
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.2,
       "position": [
-        1824,
-        -528
+        0,
+        -656
       ],
       "id": "130df5c3-c974-479f-9c6c-f6b130bf23a8",
       "name": "Mark Case 'Retry_Exhausted'",
       "credentials": {
         "microsoftSql": {
+          "id": "7hcGh4NgGUx3zDX7",
           "name": "Microsoft SQL account"
         }
       }
-    },
-    {
-      "parameters": {
-        "jsCode": "const error_items = $input.all().map(item => item.json)\nreturn error_items.map(item => {\n  const retryable = item.error.status === 429 ||\n  item.error.status === 500 ||\n  item.error.status === 502 ||\n  item.error.status === 503 ||\n  item.error.status === 504 \n  return {\n    json:{\n    ...item,\n    retryable  \n    }\n  }\n})\n \n\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        720,
-        304
-      ],
-      "id": "d2d6e98a-a32e-4c67-8057-4c9db9d4d73e",
-      "name": "Classify API Error"
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "UPDATE dbo.case_table\nSET status = $2,\n  updated_at = GETDATE()\nWHERE case_id = $1;",
-        "options": {
-          "queryReplacement": "={{ $json.case_id }}, {{ $json.status }}"
-        }
-      },
-      "type": "n8n-nodes-base.microsoftSql",
-      "typeVersion": 1.2,
-      "position": [
-        1264,
-        624
-      ],
-      "id": "b6d116ef-5a20-41cc-b2ba-22f992aeb622",
-      "name": "Mark Case 'Failed'",
-      "credentials": {
-        "microsoftSql": {
-          "name": "Microsoft SQL account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
-              "id": "fb90a1b6-af3f-4e06-9455-c988db976d6d",
-              "leftValue": "={{$json.retry_count}}",
-              "rightValue": 3,
-              "operator": {
-                "type": "number",
-                "operation": "lte"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        1264,
-        400
-      ],
-      "id": "745cc9d0-49b8-4e56-8bda-19ee60ff1417",
-      "name": "Retry Limit Reached?"
-    },
-    {
-      "parameters": {
-        "jsCode": "const case_data = $('Prepare ticket Request').all()\nconst ticket_id = $input.all()\n\nreturn case_data.map((item,i) => {\n  return{\n    json:{\n    case_id : item.json.case_id,\n    status : \"ticket_created\",\n    ticket_id : ticket_id[i].json.id \n    }\n  }\n});\n\n\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        816,
-        80
-      ],
-      "id": "99dc3ed7-e6e6-4eda-97e0-3b14a122cfaf",
-      "name": "Prepare Ticket Update"
-    },
-    {
-      "parameters": {
-        "jsCode": "const cases = $input.all()\nreturn cases.map(item => {\n  return {\n    json:{\n      ...item.json,\n      retry_count : (item.json.retry_count || 0 ) + 1\n    }\n  }\n})"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1024,
-        400
-      ],
-      "id": "34077840-4d8d-4592-bf14-3522b6dbf21f",
-      "name": "Increment Retry Count"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.restful-api.dev/objects",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "case_id",
-              "value": "={{ $json.case_id }}"
-            },
-            {
-              "name": "message",
-              "value": "={{ $json.customer_message }}"
-            },
-            {
-              "name": "issue",
-              "value": "={{ $json.issue }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.5,
-      "position": [
-        512,
-        144
-      ],
-      "id": "58607a7a-6a36-4c1b-929d-c50df2b4c3fa",
-      "name": "Create Support Ticket",
-      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -579,8 +304,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2480,
-        -128
+        -3040,
+        -192
       ],
       "id": "972bb0f5-b27d-4e2f-913e-58f9902913f6",
       "name": "Split Customer Requests"
@@ -597,7 +322,7 @@
           "conditions": [
             {
               "id": "134cea55-3a7f-475d-b41c-6ac5e0f4276c",
-              "leftValue": "={{ $json.customer_id }}",
+              "leftValue": "={{ $json.customer_id}}",
               "rightValue": "null",
               "operator": {
                 "type": "string",
@@ -613,8 +338,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -2048,
-        -128
+        -2880,
+        224
       ],
       "id": "9eda108d-f209-48c6-b8e4-3937c5e223a3",
       "name": "Customer Exists?"
@@ -630,14 +355,15 @@
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.2,
       "position": [
-        -2272,
-        -128
+        -3072,
+        224
       ],
       "id": "d56ce8a8-5ede-47b4-9c61-34cd50dda417",
       "name": "Find Existing Customer",
       "alwaysOutputData": true,
       "credentials": {
         "microsoftSql": {
+          "id": "7hcGh4NgGUx3zDX7",
           "name": "Microsoft SQL account"
         }
       }
@@ -653,13 +379,14 @@
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.2,
       "position": [
-        -2048,
-        208
+        -2592,
+        528
       ],
       "id": "c477727b-972f-4f3a-8819-d4803ea5fddb",
       "name": "Create Customer Record",
       "credentials": {
         "microsoftSql": {
+          "id": "7hcGh4NgGUx3zDX7",
           "name": "Microsoft SQL account"
         }
       }
@@ -667,7 +394,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO dbo.case_table\n(\n  case_id,\n  customer_id,\n  idempotency_key,\n  message,\n  created_at\n)\nOUTPUT INSERTED.customer_id,\n  'Case executed successfully' AS message\nVALUES (\n  $1,\n  $2,\n  $3,\n  $4,\n  GETDATE()\n);",
+        "query": "INSERT INTO dbo.case_table\n(\n  case_id,\n  customer_id,\n  idempotency_key,\n  message,\n  created_at\n)\nOUTPUT INSERTED.case_id,\n  INSERTED.customer_id,\n  'Case executed successfully' AS message\nVALUES (\n  $1,\n  $2,\n  $3,\n  $4,\n  GETDATE()\n);",
         "options": {
           "queryReplacement": "={{ $json.case_id }}, {{ $json.customer_id }}, {{ $json.idempotency_key }}, {{ $json.customer_message }}"
         }
@@ -675,13 +402,14 @@
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.2,
       "position": [
-        -1520,
-        -112
+        -2400,
+        0
       ],
       "id": "53c3bebd-9f2f-4768-88cf-f50bd6df0b3f",
       "name": "Create Case Record",
       "credentials": {
         "microsoftSql": {
+          "id": "7hcGh4NgGUx3zDX7",
           "name": "Microsoft SQL account"
         }
       },
@@ -698,26 +426,27 @@
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.2,
       "position": [
-        -672,
-        -128
+        -656,
+        144
       ],
       "id": "53d6a246-cc39-476c-92ab-a29f2f7d3e2f",
       "name": "Update Case with AI Output1",
       "credentials": {
         "microsoftSql": {
+          "id": "7hcGh4NgGUx3zDX7",
           "name": "Microsoft SQL account"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "const customers = $('Prepare AI Input').all().map(item => item.json);\nconst ai_outputs = $input.all().map(item => item.json);\nreturn ai_outputs.map(item => {\n  const customer = customers.find(customer => customer.case_id === item.output.case_id)\n  return {\n    json:{\n      ...customer,\n      issue : item.output.issue,\n      priority : item.output.priority\n    }\n  }                           \n});"
+        "jsCode": "const original = $(\"Prepare AI Input\").item.json;\nconst ai = $json.output;\n\nreturn {\n  json: {...original,\n  issue: ai.issue,\n  priority: ai.priority\n  }\n};"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -960,
-        48
+        -928,
+        144
       ],
       "id": "ccf313d3-ad5b-4218-8fa7-981f4722a355",
       "name": "Merge Customer Data + AI Output"
@@ -749,8 +478,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        -448,
-        432
+        -224,
+        528
       ],
       "id": "61235524-b048-4dd9-a657-130d5ae1010d",
       "name": "Within Retry Limit?1"
@@ -762,151 +491,11 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -672,
-        432
+        -464,
+        528
       ],
       "id": "eefa0ca0-ed4f-445e-a263-6c57d7dbd5c2",
       "name": "Retry Count Update"
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "INSERT INTO dbo.error_log(\ncase_id,\ncustomer_id,\ncustomer_name,\ngmail,\nmessage,\nerror,\nerror_type,\nretryable,\nstatus,\ncreated_at)\n  \nVALUES(\n  $1,\n  $2,\n  $3,\n  $4, \n  $5,\n  $6,\n  $7,\n  $8,\n  $9,\n  GETDATE()\n);",
-        "options": {
-          "queryReplacement": "={{ $json.case_id }}, {{ $json.customer_id }}, {{ $json.customer_name }}, {{ $json.customer_gmail }}, {{ $json.customer_message }}, {{ $json.error }}, {{ $json.error_type }}, {{ $json.retryable }}, {{ $json.status }}"
-        }
-      },
-      "type": "n8n-nodes-base.microsoftSql",
-      "typeVersion": 1.2,
-      "position": [
-        48,
-        480
-      ],
-      "id": "512977a9-3907-4ab1-ad91-f26d58efe89e",
-      "name": "Mark Case 'Retry_exhausted'",
-      "credentials": {
-        "microsoftSql": {
-          "name": "Microsoft SQL account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "INSERT INTO dbo.error_log(\ncase_id,\ncustomer_id,\ncustomer_name,\ngmail,\nmessage,\nerror,\nerror_type,\nretryable,\nstatus,\ncreated_at)\n  \nVALUES(\n  $1,\n  $2,\n  $3,\n  $4, \n  $5,\n  $6,\n  $7,\n  $8,\n  $9,\n  GETDATE()\n);",
-        "options": {
-          "queryReplacement": "={{ $json.case_id }},  {{ $json.customer_id }}, {{ $json.customer_name }}, {{ $json.customer_gmail }}, {{ $json.customer_message }}, {{ $json.error }}, {{ $json.error_type }}, {{ $json.retryable }}, {{ $json.status }}"
-        }
-      },
-      "type": "n8n-nodes-base.microsoftSql",
-      "typeVersion": 1.2,
-      "position": [
-        -464,
-        688
-      ],
-      "id": "a1ac8ee0-b0b5-4892-aa73-b1a69bf501ca",
-      "name": "Mark Case 'failed'",
-      "credentials": {
-        "microsoftSql": {
-          "name": "Microsoft SQL account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "UPDATE dbo.case_table\nSET status = $2,\nupdated_at = GETDATE()\nOUTPUT INSERTED.case_id,\n  'status updated successfully'\nWHERE case_id = $1;",
-        "options": {
-          "queryReplacement": "={{ $json.case_id }}, {{ $json.status }}"
-        }
-      },
-      "type": "n8n-nodes-base.microsoftSql",
-      "typeVersion": 1.2,
-      "position": [
-        240,
-        -448
-      ],
-      "id": "9001c59d-5274-4ed6-9c24-f7046f6fe3e8",
-      "name": "Mark Case 'Waiting_for_human_review'",
-      "credentials": {
-        "microsoftSql": {
-          "name": "Microsoft SQL account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "UPDATE dbo.case_table\nSET status = $2,\n  updated_at = GETDATE()\nWHERE case_id = $1",
-        "options": {
-          "queryReplacement": "={{ $json.case_id }}, {{ $json.status }}"
-        }
-      },
-      "type": "n8n-nodes-base.microsoftSql",
-      "typeVersion": 1.2,
-      "position": [
-        240,
-        192
-      ],
-      "id": "10f8983b-c30b-455b-a599-3ff111fd13ba",
-      "name": "Mark Case 'Invalid_Output'",
-      "credentials": {
-        "microsoftSql": {
-          "name": "Microsoft SQL account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "return [{\n  json: {\n    cases: $input.all().map(item=> ({\n      case_id : item.json.case_id\n    })     \n    )\n  }\n}]"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        400,
-        -624
-      ],
-      "id": "536dfcd2-b0f9-436e-843a-434225dee2d9",
-      "name": "Prepare Case IDs for HITL"
-    },
-    {
-      "parameters": {
-        "jsCode": "const customers_data = $input.all().map(item => item.json)\nreturn customers_data.map(customer => ({\n  ...customer,\n  status : 'waiting_for_human_review'\n}))"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        48,
-        -256
-      ],
-      "id": "992c2fde-0b76-47ef-8481-9b18d3c84722",
-      "name": "Set 'Human Review' Status"
-    },
-    {
-      "parameters": {
-        "jsCode": "const cases = $input.all()\nreturn cases.map(item=>{\n  return{\n    json:{\n      ...item.json,\n      status : \"invalid_output\"\n    }\n  }\n});"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        48,
-        192
-      ],
-      "id": "b8279c54-df46-4e05-86a7-c351f03fc505",
-      "name": "Set 'Invalid Output' Status"
-    },
-    {
-      "parameters": {
-        "jsCode": "const case_data = $input.all()\nreturn case_data.map(item => {\n  return {\n    json:{\n      case_id : item.json.case_id,\n      status : \"failed\"\n    }\n  }\n})\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1024,
-        624
-      ],
-      "id": "3e247626-b746-4cfb-8ccb-9257aaf76788",
-      "name": "Set 'Failed' Status"
     },
     {
       "parameters": {
@@ -919,13 +508,14 @@
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.2,
       "position": [
-        1360,
-        -288
+        -464,
+        -240
       ],
       "id": "4564f5e3-503b-42f3-85f6-34198ecc8695",
       "name": "Mark Case 'Excalated'",
       "credentials": {
         "microsoftSql": {
+          "id": "7hcGh4NgGUx3zDX7",
           "name": "Microsoft SQL account"
         }
       }
@@ -937,50 +527,37 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1120,
-        -288
+        -720,
+        -240
       ],
       "id": "655a0806-3324-4479-a69e-6f3cf4608915",
       "name": "Set 'Escalated' Status"
     },
     {
       "parameters": {
-        "jsCode": "const cases = $input.first().json.cases\nreturn cases.map(item => {\n  return {\n    ...item,\n    status : \"retry_exhausted\"\n  }\n})\n\n"
+        "jsCode": "const cases = $input.first().json.cases\nreturn cases.map(item => {\n  return {\n    json:{\n    ...item,\n    status : \"retry_exhausted\"\n    }\n  }\n});\n\n"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1616,
-        -528
+        -224,
+        -656
       ],
       "id": "3c2b1c2e-a6a5-4c16-a987-b792f2b1e7c9",
       "name": "Set 'Retry Exhausted' Status1"
     },
     {
       "parameters": {
-        "jsCode": "const cases = $input.all().map(item => item.json)\nconst customer_data = $('Merge Customer Data + AI Output').all().map(item => item.json)\nreturn cases.map(item => {\n  const customer= customer_data.find(customer => customer.case_id === item.case_id)\n  return {\n    json:{\n      ...customer\n    }\n  }\n})"
+        "jsCode": "const case_id = $input.first().json.case_id\nconst case_data = $(\"Merge Customer Data + AI Output\").first().json\nreturn [{\n  json:{\n    ...case_data\n  }\n}]"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -384,
-        -128
+        -432,
+        288
       ],
       "id": "9f89c114-54eb-406f-b8bf-c9f1b1d2595a",
       "name": "Prepare Case for Priority Routing"
-    },
-    {
-      "parameters": {
-        "jsCode": "const cases = $input.all().map(item => item.json)\nreturn cases.map(item => {\n  return{\n    json:{\n      ...item,\n      status : 'retry_exhausted'\n    }\n  }\n});"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -176,
-        480
-      ],
-      "id": "96505ac8-248b-4694-9f11-173353fd5071",
-      "name": "Set Status = Retry_Exhausted"
     },
     {
       "parameters": {
@@ -989,8 +566,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -656,
-        688
+        -448,
+        816
       ],
       "id": "d632b833-7001-414f-9755-6965be73fe6b",
       "name": "Set Status = 'Failed'"
@@ -998,90 +575,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE dbo.case_table\nSET status = $2,\n    updated_at = GETDATE()\nWHERE case_id = $1;",
-        "options": {
-          "queryReplacement": "={{ $json.case_id }}, {{ $json.status }}"
-        }
-      },
-      "type": "n8n-nodes-base.microsoftSql",
-      "typeVersion": 1.2,
-      "position": [
-        1760,
-        352
-      ],
-      "id": "67e912a1-f975-41de-a685-fbe60fcd0967",
-      "name": "Mark Case 'Retry_Exhausted'1",
-      "credentials": {
-        "microsoftSql": {
-          "name": "Microsoft SQL account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const case_data = $input.all()\nreturn case_data.map(item => {\n  return {\n    json:{\n      case_id : item.json.case_id,\n      status : \"retry_exhausted\"\n    }\n  }\n})"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1536,
-        352
-      ],
-      "id": "ed3d8b2e-ee94-4e34-91a5-8c15a88ca2a1",
-      "name": "Set 'Retry Exhausted' Status"
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "UPDATE dbo.case_table\nSET status = $2,\n  ticket_id = $3,\n updated_at = GETDATE()\nWHERE case_id = $1;\n\n",
-        "options": {
-          "queryReplacement": "={{ $json.case_id }}, {{ $json.status }},{{ $json.ticket_id }}"
-        }
-      },
-      "type": "n8n-nodes-base.microsoftSql",
-      "typeVersion": 1.2,
-      "position": [
-        1040,
-        80
-      ],
-      "id": "da762790-f863-4dd9-8a6a-667c273b7ec1",
-      "name": "Mark Case 'Ticket Created'",
-      "credentials": {
-        "microsoftSql": {
-          "name": "Microsoft SQL account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const cases = $input.all().map(item => item.json)\nreturn cases.map(item => {\n  return {\n    ...item,\n    status : 'processing'\n  }\n});"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        176,
-        -16
-      ],
-      "id": "9ae90e68-c71c-4c85-8ddd-66080efa6a28",
-      "name": "Prepare ticket Request"
-    },
-    {
-      "parameters": {
-        "jsCode": "\nconst items = $input.all();\n\nreturn items.map(item => {\n  const error = String(item.json.error || \"\").toLowerCase();\n\n  const isDuplicate =\n    error.includes(\"uq_case_table_idempotency_key\");\n\n  return {\n    json: {\n      ...item.json,\n      error_type: isDuplicate\n        ? \"duplicate_request\"\n        : \"database_error\",\n      status: isDuplicate\n        ? \"duplicate_ignored\"\n        : \"failed\"\n    }\n  };\n});\n"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -1328,
-        -384
-      ],
-      "id": "9553c826-1123-4bd8-8953-e6c0a7c4c552",
-      "name": "Code in JavaScript"
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "INSERT INTO dbo.error_log(\ncase_id,\ncustomer_id,\ncustomer_name,\ngmail,\nmessage,\nerror,\nerror_type,\nstatus,\ncreated_at)\n  \nVALUES(\n  $1,\n  $2,\n  $3,\n  $4, \n  $5,\n  $6,\n  $7,\n  $8,\n  GETDATE()\n);",
+        "query": "INSERT INTO dbo.error_log(\ncase_id,\ncustomer_id,\ncustomer_name,\ngmail,\nmessage,\nerror,\nerror_type,\nstatus,\ncreated_at)\n\nOUTPUT INSERTED.case_id, \n  INSERTED.status,\n  'case inserted successfully' AS message\n  \nVALUES(\n  $1,\n  $2,\n  $3,\n  $4, \n  $5,\n  $6,\n  $7,\n  $8,\n  GETDATE()\n);",
         "options": {
           "queryReplacement": "={{ $json.case_id }}, {{ $json.customer_id }}, {{ $json.customer_name }}, {{ $json.customer_gmail }}, {{ $json.customer_message }}, {{ $json.error }}, {{ $json.error_type }}, {{ $json.status }}"
         }
@@ -1089,16 +583,192 @@
       "type": "n8n-nodes-base.microsoftSql",
       "typeVersion": 1.2,
       "position": [
-        -1088,
-        -384
+        -1872,
+        -432
       ],
       "id": "24b66cec-a25f-4156-863f-125225faf049",
-      "name": "Microsoft SQL",
+      "name": "Create Error Record",
       "credentials": {
         "microsoftSql": {
+          "id": "7hcGh4NgGUx3zDX7",
           "name": "Microsoft SQL account"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst items = $input.all().map(item => item.json);\n\nreturn items.map(item => {\n  const error = (typeof item.error === \"string\" \n                 ? item.error\n                 : item.error?.message ||\n                   item.error?.description || \"\").toLowerCase();\n\n  const isDuplicate =\n    error.includes(\"uq_case_table_idempotency_key\");\n\n  return {\n    json: {\n      ...item,\n      error_type: isDuplicate\n        ? \"duplicate_request\"\n        : \"database_error\",\n      status: isDuplicate\n        ? \"duplicate_ignored\"\n        : \"failed\"\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2112,
+        -192
+      ],
+      "id": "9553c826-1123-4bd8-8953-e6c0a7c4c552",
+      "name": "Set Status "
+    },
+    {
+      "parameters": {
+        "jsCode": "const cases = $input.all().map(item => item.json)\nreturn cases.map(item => {\n  return{\n    json:{\n      ...item,\n      status : 'retry_exhausted'\n    }\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        480
+      ],
+      "id": "96505ac8-248b-4694-9f11-173353fd5071",
+      "name": "Set  Error Status"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO dbo.error_log(\ncase_id,\ncustomer_id,\ncustomer_name,\ngmail,\nmessage,\nerror,\nerror_type,\nretryable,\nstatus,\ncreated_at)\nOUTPUT INSERTED.case_id, \n  INSERTED.status,\n  'case inserted successfully' AS message\nVALUES(\n  $1,\n  $2,\n  $3,\n  $4, \n  $5,\n  $6,\n  $7,\n  $8,\n  $9,\n  GETDATE()\n);",
+        "options": {
+          "queryReplacement": "={{ $json.case_id }}, {{ $json.customer_id }}, {{ $json.customer_name }}, {{ $json.customer_gmail }}, {{ $json.customer_message }}, {{ $json.error }}, {{ $json.error_type }}, {{ $json.retryable }}, {{ $json.status }}"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.2,
+      "position": [
+        256,
+        480
+      ],
+      "id": "512977a9-3907-4ab1-ad91-f26d58efe89e",
+      "name": "Generate Error Record",
+      "credentials": {
+        "microsoftSql": {
+          "id": "7hcGh4NgGUx3zDX7",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO dbo.error_log(\ncase_id,\ncustomer_id,\ncustomer_name,\ngmail,\nmessage,\nerror,\nerror_type,\nretryable,\nstatus,\ncreated_at)\nOUTPUT INSERTED.case_id, \n  INSERTED.status,\n  'case inserted successfully' AS message\nVALUES(\n  $1,\n  $2,\n  $3,\n  $4, \n  $5,\n  $6,\n  $7,\n  $8,\n  $9,\n  GETDATE()\n);",
+        "options": {
+          "queryReplacement": "={{ $json.case_id }},  {{ $json.customer_id }}, {{ $json.customer_name }}, {{ $json.customer_gmail }}, {{ $json.customer_message }}, {{ $json.error }}, {{ $json.error_type }}, {{ $json.retryable }}, {{ $json.status }}"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.2,
+      "position": [
+        -192,
+        816
+      ],
+      "id": "a1ac8ee0-b0b5-4892-aa73-b1a69bf501ca",
+      "name": "Create Error Record1",
+      "credentials": {
+        "microsoftSql": {
+          "id": "7hcGh4NgGUx3zDX7",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE dbo.case_table\nSET status = $2,\n  updated_at = GETDATE()\nWHERE case_id = $1;",
+        "options": {
+          "queryReplacement": "={{ $json.case_id }}, {{ $json.status }}"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.2,
+      "position": [
+        -1648,
+        -656
+      ],
+      "id": "23669bec-1aee-4787-8a05-25c9ca84bf91",
+      "name": "Update Case Status",
+      "credentials": {
+        "microsoftSql": {
+          "id": "7hcGh4NgGUx3zDX7",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE dbo.case_table\nSET status = $2,\n  updated_at = GETDATE()\nWHERE case_id = $1;",
+        "options": {
+          "queryReplacement": "={{ $json.case_id }}, {{ $json.status }}"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftSql",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        656
+      ],
+      "id": "3e5385c7-3c34-41e6-89e9-25ad638fc4ae",
+      "name": "Update Case",
+      "credentials": {
+        "microsoftSql": {
+          "id": "7hcGh4NgGUx3zDX7",
+          "name": "Microsoft SQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1872,
+        224
+      ],
+      "id": "8e418333-a180-4041-97c6-69f16bb71da2",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        -1632,
+        320
+      ],
+      "id": "4f7a2c7a-ca11-4000-905c-556ff2a68c6e",
+      "placeholder": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/process_approved_cases",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -1456,
+        -336
+      ],
+      "id": "bf1cfd52-a4cf-4b4b-ae7c-62625cfb821c",
+      "name": "HTTP Request",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const cases =$input.all().map(item => item.json)\nreturn {\n  json:{\n    cases: cases.map(item => item.case_id)\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1664,
+        -80
+      ],
+      "id": "11bed971-e9f1-4c33-ba4d-caee290cf386",
+      "name": "Prepare Request"
     }
   ],
   "pinData": {},
@@ -1107,18 +777,7 @@
       "main": [
         [
           {
-            "node": "Send High-Priority Case to HITL",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Wait1": {
-      "main": [
-        [
-          {
-            "node": "Create Support Ticket",
+            "node": "HTTP Request",
             "type": "main",
             "index": 0
           }
@@ -1202,7 +861,7 @@
       "main": [
         [
           {
-            "node": "Information Extractor",
+            "node": "Loop Over Items",
             "type": "main",
             "index": 0
           }
@@ -1214,50 +873,6 @@
         [
           {
             "node": "Retryable?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Priority Router": {
-      "main": [
-        [
-          {
-            "node": "Set 'Human Review' Status",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Prepare ticket Request",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Prepare ticket Request",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Set 'Invalid Output' Status",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Send High-Priority Case to HITL": {
-      "main": [
-        [],
-        [
-          {
-            "node": "Claasify Error",
             "type": "main",
             "index": 0
           }
@@ -1287,24 +902,6 @@
         [
           {
             "node": "Set Status = 'Failed'",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Retryable?1": {
-      "main": [
-        [
-          {
-            "node": "Increment Retry Count",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Set 'Failed' Status",
             "type": "main",
             "index": 0
           }
@@ -1352,75 +949,6 @@
         [
           {
             "node": "Set 'Retry Exhausted' Status1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Classify API Error": {
-      "main": [
-        [
-          {
-            "node": "Retryable?1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Retry Limit Reached?": {
-      "main": [
-        [
-          {
-            "node": "Wait1",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Set 'Retry Exhausted' Status",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare Ticket Update": {
-      "main": [
-        [
-          {
-            "node": "Mark Case 'Ticket Created'",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Increment Retry Count": {
-      "main": [
-        [
-          {
-            "node": "Retry Limit Reached?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Create Support Ticket": {
-      "main": [
-        [
-          {
-            "node": "Prepare Ticket Update",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Classify API Error",
             "type": "main",
             "index": 0
           }
@@ -1489,7 +1017,7 @@
         ],
         [
           {
-            "node": "Code in JavaScript",
+            "node": "Set Status ",
             "type": "main",
             "index": 0
           }
@@ -1529,7 +1057,7 @@
         ],
         [
           {
-            "node": "Set Status = Retry_Exhausted",
+            "node": "Set  Error Status",
             "type": "main",
             "index": 0
           }
@@ -1541,66 +1069,6 @@
         [
           {
             "node": "Within Retry Limit?1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Mark Case 'Waiting_for_human_review'": {
-      "main": [
-        [
-          {
-            "node": "Prepare Case IDs for HITL",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Mark Case 'Invalid_Output'": {
-      "main": [
-        []
-      ]
-    },
-    "Prepare Case IDs for HITL": {
-      "main": [
-        [
-          {
-            "node": "Send High-Priority Case to HITL",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set 'Human Review' Status": {
-      "main": [
-        [
-          {
-            "node": "Mark Case 'Waiting_for_human_review'",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set 'Invalid Output' Status": {
-      "main": [
-        [
-          {
-            "node": "Mark Case 'Invalid_Output'",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set 'Failed' Status": {
-      "main": [
-        [
-          {
-            "node": "Mark Case 'Failed'",
             "type": "main",
             "index": 0
           }
@@ -1633,18 +1101,7 @@
       "main": [
         [
           {
-            "node": "Priority Router",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set Status = Retry_Exhausted": {
-      "main": [
-        [
-          {
-            "node": "Mark Case 'Retry_exhausted'",
+            "node": "Loop Over Items",
             "type": "main",
             "index": 0
           }
@@ -1655,40 +1112,114 @@
       "main": [
         [
           {
-            "node": "Mark Case 'failed'",
+            "node": "Create Error Record1",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Set 'Retry Exhausted' Status": {
+    "Set Status ": {
       "main": [
         [
           {
-            "node": "Mark Case 'Retry_Exhausted'1",
+            "node": "Create Error Record",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Prepare ticket Request": {
+    "Set  Error Status": {
       "main": [
         [
           {
-            "node": "Create Support Ticket",
+            "node": "Generate Error Record",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Code in JavaScript": {
+    "Create Error Record1": {
       "main": [
         [
           {
-            "node": "Microsoft SQL",
+            "node": "Update Case",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Error Record": {
+      "main": [
+        [
+          {
+            "node": "Update Case",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Error Record": {
+      "main": [
+        [
+          {
+            "node": "Update Case Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Prepare Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Claasify Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Request": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
             "type": "main",
             "index": 0
           }
@@ -1701,9 +1232,12 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
+  "versionId": "67f881dc-198f-4f72-960d-eeb61ca4117a",
   "meta": {
-    "templateCredsSetupCompleted": true
+    "templateCredsSetupCompleted": true,
+    "instanceId": "19270faab28bab28d9eea200014a43bde06b195c222bfac1c59c19b455b9b568"
   },
   "nodeGroups": [],
+  "id": "8wfBfNGVHJEJUjfR",
   "tags": []
 }
